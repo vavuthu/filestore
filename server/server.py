@@ -156,10 +156,10 @@ class ServerHandler(SimpleHTTPRequestHandler):
         )
         if isinstance(form["file"], list):
             for record in form["file"]:
-                open(record.filename, "ab").write(record.file.read())
+                open(record.filename, "wb").write(record.file.read())
                 response_msg += f"{record.filename} updated successfully\n"
         else:
-            open(form["file"].filename, "ab").write(form["file"].file.read())
+            open(form["file"].filename, "wb").write(form["file"].file.read())
             response_msg += f"{form['file'].filename} updated successfully\n"
 
         response.write(response_msg.encode("utf-8"))
