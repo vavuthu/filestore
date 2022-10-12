@@ -1,5 +1,6 @@
 import argparse
 
+from client.add_files import add_files
 from client.list_files import list_files
 
 
@@ -52,7 +53,7 @@ def main():
         print("At least 1 operation is required")
 
     if store_add:
-        pass
+        add_files(store_add, store_location)
 
     if store_ls:
         list_files(store_location)
