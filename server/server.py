@@ -5,6 +5,7 @@ server side implementation for uploading data
 import cgi
 import json
 import os
+import re
 
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from io import BytesIO
@@ -75,8 +76,6 @@ class ServerHandler(SimpleHTTPRequestHandler):
         """
         response_msg = ""
         content_type, _ = cgi.parse_header(self.headers["Content-Type"])
-        # pdict['boundary'] = bytes(pdict['boundary'], "utf-8")
-        # pdict['CONTENT-LENGTH'] = int(self.headers['Content-Length'])
 
         if content_type == "multipart/form-data":
             form = cgi.FieldStorage(
@@ -117,6 +116,26 @@ class ServerHandler(SimpleHTTPRequestHandler):
         """
         if os.path.isfile(filename):
             return True
+
+    def do_DELETE(self):
+        response_msg = ""
+        # requestline: 'DELETE /?files_to_delete=f5&files_to_delete=f6 HTTP/1.1'
+        files_to_delete = re.findall(r"=(\w+)", self.requestline)
+        is_delete_failed = False
+        for file in files_to_delete:
+            try:
+                os.remove(file)
+            except OSError as e:
+                is_delete_failed = True
+                response_msg += f"Error: {e.filename} - {e.strerror}\n"
+
+        if is_delete_failed:
+            self.send_response(404)
+        else:
+            self.send_response(200)
+        print(response_msg)
+        self.end_headers()
+        self.wfile.write(response_msg.encode("utf-8"))
 
 
 def run_server(server_class=HTTPServer, handler_class=ServerHandler):
