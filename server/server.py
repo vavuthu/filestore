@@ -118,6 +118,9 @@ class ServerHandler(SimpleHTTPRequestHandler):
             return True
 
     def do_DELETE(self):
+        """
+        Serves a DELETE request
+        """
         response_msg = ""
         # requestline: 'DELETE /?files_to_delete=f5&files_to_delete=f6 HTTP/1.1'
         files_to_delete = re.findall(r"=(\w+)", self.requestline)
@@ -136,6 +139,33 @@ class ServerHandler(SimpleHTTPRequestHandler):
         print(response_msg)
         self.end_headers()
         self.wfile.write(response_msg.encode("utf-8"))
+
+    def do_PUT(self):
+        """
+        Serves a PUT request
+        """
+        response_msg = ""
+        response = BytesIO()
+        form = cgi.FieldStorage(
+            fp=self.rfile,
+            headers=self.headers,
+            environ={
+                "REQUEST_METHOD": "PUT",
+                "CONTENT_TYPE": self.headers["Content-Type"],
+            },
+        )
+        if isinstance(form["file"], list):
+            for record in form["file"]:
+                open(record.filename, "ab").write(record.file.read())
+                response_msg += f"{record.filename} updated successfully\n"
+        else:
+            open(form["file"].filename, "ab").write(form["file"].file.read())
+            response_msg += f"{form['file'].filename} updated successfully\n"
+
+        response.write(response_msg.encode("utf-8"))
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(response.getvalue())
 
 
 def run_server(server_class=HTTPServer, handler_class=ServerHandler):
