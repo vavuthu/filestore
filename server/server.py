@@ -33,7 +33,18 @@ class ServerHandler(SimpleHTTPRequestHandler):
         """
         response_msg = " "
         path = f"{self.translate_path(self.path)}"
-        files_list = os.listdir(path)
+        files_list = [file for file in os.listdir(path) if os.path.isfile(file)]
+
+        if "count_words" in self.requestline:
+            word_count = self.count_words(files_list)
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(
+                f"Total number of words in all files are {word_count}".encode(
+                    encoding="utf_8"
+                )
+            )
+            return
 
         # calculate md5sum if header contains md5sum
         if self.headers.get("md5sum"):
@@ -48,6 +59,16 @@ class ServerHandler(SimpleHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
         self.wfile.write(response_msg.encode(encoding="utf_8"))
+
+    def count_words(self, files_list):
+        """
+        Count the words in given list of files
+        """
+        count = 0
+        for each_file in files_list:
+            with open(each_file, "r") as fd:
+                count += len(fd.read().split())
+        return count
 
     def do_POST(self):
         """

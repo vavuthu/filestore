@@ -4,6 +4,7 @@ from client.add_files import add_files
 from client.list_files import list_files
 from client.remove_files import remove_files
 from client.update_files import update_files
+from client.word_count import word_count
 
 
 def arg_parser():
@@ -46,6 +47,13 @@ def arg_parser():
         help="delete files from http server",
     )
     parser.add_argument(
+        "--wc",
+        action="store_true",
+        required=False,
+        default=False,
+        help="word count on all the files from http server",
+    )
+    parser.add_argument(
         "--url",
         action="store",
         required=False,
@@ -65,9 +73,10 @@ def main():
     store_ls = parser.ls
     store_rm = parser.rm
     store_update = parser.update
+    store_wc = parser.wc
     store_location = parser.url
 
-    if not (store_add or store_ls or store_rm or store_update):
+    if not (store_add or store_ls or store_rm or store_update or store_wc):
         print("At least 1 operation is required")
 
     if store_add:
@@ -81,3 +90,6 @@ def main():
 
     if store_update:
         update_files(store_update, store_location)
+
+    if store_wc:
+        word_count(store_location)
