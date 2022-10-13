@@ -32,4 +32,112 @@ using below command
 ## client side
 
 Once virtual environment is activated and installed requirements.txt from above steps,
-use `store` command to perform file operations like ls, add, etc
+use `store` command to perform file operations like ls, add, etc. Few example are below for reference
+
+### add
+Uploads multiple files to server.
+
+1. add multiples files to server
+```console
+$ store --add file1 file2
+file1 uploaded successfully
+file2 uploaded successfully
+```
+
+2. add multiples files with few files already existed in server (skips the upload of existing files)
+```console
+$ store --add file1 file3 file4
+file1 exists in server. skipping upload...
+
+file3 uploaded successfully
+file4 uploaded successfully
+```
+
+3. add files having same content present in server ( create files in server without sending contents to server)
+```console
+$ store --add dup
+dup is duplicate of file3 in server
+created dup without sending contents over network
+```
+
+### ls
+List all the files in server
+
+```console
+$ store --ls
+file1
+file2
+file3
+file4
+dup
+```
+
+### rm
+Remove files from server
+
+1. remove multiple files from server
+```console
+$ store --rm file1 file2
+```
+
+2. remove a file which doesn't exist on server
+```console
+$ store --rm file1
+Error: file1 - No such file or directory
+```
+
+### update
+Updates file on server, if file doesn't exist it will create new file
+
+```console
+$ store --update updatefile1 
+updatefile1 updated successfully
+```
+
+### wc
+Count the number of words on all files in file store
+
+```console
+$ store --wc
+Total number of words in all files are 8
+```
+
+### freq_words
+List the most frequent words in all the files combined. We can list by either limit (default limit is 10)
+and order (dsc or asc, default value is dsc(descending))
+
+1. List most frequent words by default values
+```console
+$ store --freq_words
+data : 19
+openshift : 14
+and : 13
+foundation : 11
+the : 10
+red : 9
+hat : 9
+for : 9
+cluster : 7
+to : 7
+```
+
+2. List most frequent words by limit
+```console
+$ store --freq_words --limit 3
+data : 19
+openshift : 14
+and : 13
+````
+
+3. List most frequent words by order
+```console
+$ store --freq_words --limit 3 --order asc
+rhacm : 1
+requirements, : 1
+detailed : 1
+```
+
+
+
+
+
