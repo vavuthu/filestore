@@ -1,6 +1,7 @@
 import argparse
 
 from client.add_files import add_files
+from client.frequent_words import frequent_words
 from client.list_files import list_files
 from client.remove_files import remove_files
 from client.update_files import update_files
@@ -54,6 +55,28 @@ def arg_parser():
         help="word count on all the files from http server",
     )
     parser.add_argument(
+        "--freq_words",
+        action="store_true",
+        required=False,
+        default=False,
+        help="most frequently used words on all the files from http server",
+    )
+    parser.add_argument(
+        "--limit",
+        action="store",
+        default=10,
+        type=int,
+        help="number of frequently used words to return from http server",
+    )
+    parser.add_argument(
+        "--order",
+        action="store",
+        default="dsc",
+        type=str,
+        choices=["dsc", "asc"],
+        help="frequently used words order by ascending(asc) or descending(dsc)",
+    )
+    parser.add_argument(
         "--url",
         action="store",
         required=False,
@@ -74,9 +97,17 @@ def main():
     store_rm = parser.rm
     store_update = parser.update
     store_wc = parser.wc
+    store_freq_words = parser.freq_words
     store_location = parser.url
 
-    if not (store_add or store_ls or store_rm or store_update or store_wc):
+    if not (
+        store_add
+        or store_ls
+        or store_rm
+        or store_update
+        or store_wc
+        or store_freq_words
+    ):
         print("At least 1 operation is required")
 
     if store_add:
@@ -93,3 +124,6 @@ def main():
 
     if store_wc:
         word_count(store_location)
+
+    if store_freq_words:
+        frequent_words(store_location, parser.limit, parser.order)

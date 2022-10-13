@@ -46,6 +46,13 @@ class ServerHandler(SimpleHTTPRequestHandler):
             )
             return
 
+        if "frequent_words" in self.requestline:
+            words_mapping = self.frequent_words(files_list)
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(str(words_mapping).encode(encoding="utf_8"))
+            return
+
         # calculate md5sum if header contains md5sum
         if self.headers.get("md5sum"):
             md5sum_mapping = {}
@@ -59,6 +66,23 @@ class ServerHandler(SimpleHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
         self.wfile.write(response_msg.encode(encoding="utf_8"))
+
+    def frequent_words(self, files_list):
+        """
+        Most frequently used words in given list of files
+        """
+        words_mapping = {}
+
+        for each_file in files_list:
+            with open(each_file, "r") as fd:
+                words = fd.read().lower().split()
+                for word in words:
+                    if words_mapping.get(word):
+                        current_count = words_mapping[word] + 1
+                    else:
+                        current_count = 1
+                    words_mapping[word] = current_count
+        return words_mapping
 
     def count_words(self, files_list):
         """
