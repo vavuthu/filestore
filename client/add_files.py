@@ -49,5 +49,14 @@ def add_files(files, location):
                 files_to_upload.append(("file", (each_file, data.read())))
 
     if files_to_upload:
-        r = requests.post(location, files=files_to_upload)
-        print(r.text)
+        try:
+            r = requests.post(location, files=files_to_upload)
+            print(r.text)
+        except requests.exceptions.HTTPError as err_http:
+            print(f"Http Error: {err_http}")
+        except requests.exceptions.Timeout as err_timeout:
+            print(f"Timeout Error: {err_timeout}")
+        except requests.exceptions.ConnectionError as err_connection:
+            print(f"Network Connection Error: {err_connection}")
+        except requests.exceptions.RequestException as err:
+            print(f"Unexpected Error: {err}")

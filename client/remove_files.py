@@ -15,5 +15,14 @@ def remove_files(files, location):
 
     """
     params = {"files_to_delete": files}
-    r = requests.delete(location, params=params)
-    print(r.text)
+    try:
+        r = requests.delete(location, params=params)
+        print(r.text)
+    except requests.exceptions.HTTPError as err_http:
+        print(f"Http Error: {err_http}")
+    except requests.exceptions.Timeout as err_timeout:
+        print(f"Timeout Error: {err_timeout}")
+    except requests.exceptions.ConnectionError as err_connection:
+        print(f"Network Connection Error: {err_connection}")
+    except requests.exceptions.RequestException as err:
+        print(f"Unexpected Error: {err}")

@@ -19,7 +19,16 @@ def frequent_words(location, limit, order):
 
     """
     params = {"frequent_words": True}
-    response = requests.get(location, params=params)
+    try:
+        response = requests.get(location, params=params)
+    except requests.exceptions.HTTPError as err_http:
+        print(f"Http Error: {err_http}")
+    except requests.exceptions.Timeout as err_timeout:
+        print(f"Timeout Error: {err_timeout}")
+    except requests.exceptions.ConnectionError as err_connection:
+        print(f"Network Connection Error: {err_connection}")
+    except requests.exceptions.RequestException as err:
+        print(f"Unexpected Error: {err}")
 
     # convert string representation of dictionary to dictionary
     words_mapping = ast.literal_eval(response.text)

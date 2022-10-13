@@ -18,5 +18,14 @@ def update_files(files, location):
     for each_file in files:
         with open(each_file, "rb") as data:
             files_to_update.append(("file", (each_file, data.read())))
-    r = requests.put(location, files=files_to_update)
-    print(r.text)
+    try:
+        r = requests.put(location, files=files_to_update)
+        print(r.text)
+    except requests.exceptions.HTTPError as err_http:
+        print(f"Http Error: {err_http}")
+    except requests.exceptions.Timeout as err_timeout:
+        print(f"Timeout Error: {err_timeout}")
+    except requests.exceptions.ConnectionError as err_connection:
+        print(f"Network Connection Error: {err_connection}")
+    except requests.exceptions.RequestException as err:
+        print(f"Unexpected Error: {err}")
