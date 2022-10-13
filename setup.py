@@ -14,6 +14,7 @@ setup(
     ),
     install_requires=[
         "bs4",
+        "python-dotenv",
         "requests",
     ],
     entry_points={

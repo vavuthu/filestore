@@ -9,11 +9,13 @@ Filestore is a simple file store service that stores plain-text files (HTTP serv
 ## Getting Started
 
 It is recommended that you use a python virtual environment to install the
-necessary dependencies in both client and server.
+necessary dependencies in both client and server. Do below steps on both server and cient
 
 1. Clone filestore repository from
     [https://github.com/vavuthu/filestore](https://github.com/vavuthu/filestore)
-    via cmd `git clone git@github.com:vavuthu/filestore.git`.
+    via cmd  
+    `git clone https://github.com/vavuthu/filestore.git` or  
+    `git clone git@github.com:vavuthu/filestore.git`.
 2. Go to filestore folder `cd filestore`.
 3. Setup a python 3.8 virtual environment.
     * `python3.8 -m venv <path/to/venv>`
@@ -26,10 +28,19 @@ Note: Follow above steps in both client and server
 
 1. Once virtual environment is activated and installed requirements.txt from above steps,
 go to any directory which we would like to act as file store and start the httpd server
-using below command
+using below command. By default it will run on port 8000
      * `run-server`
 
 ## client side
+
+Edit the .env file in filestore repository and add the server URL. Incase you are running httpd
+server locally, no need to edit the file.
+example: If httpd server is running on 10.x.xxx.xxx, .env looks like below
+
+```console
+$ cat .env 
+URL=http://10.x.xxx.xxx:8000/
+```
 
 Once virtual environment is activated and installed requirements.txt from above steps,
 use `store` command to perform file operations like ls, add, etc. Few example are below for reference

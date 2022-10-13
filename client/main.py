@@ -1,4 +1,5 @@
 import argparse
+import os
 
 from client.add_files import add_files
 from client.frequent_words import frequent_words
@@ -6,6 +7,7 @@ from client.list_files import list_files
 from client.remove_files import remove_files
 from client.update_files import update_files
 from client.word_count import word_count
+from dotenv import load_dotenv
 
 
 def arg_parser():
@@ -76,14 +78,6 @@ def arg_parser():
         choices=["dsc", "asc"],
         help="frequently used words order by ascending(asc) or descending(dsc)",
     )
-    parser.add_argument(
-        "--url",
-        action="store",
-        required=False,
-        type=str,
-        default="http://0.0.0.0:8000/",
-        help="list files in http server",
-    )
     return parser.parse_args()
 
 
@@ -91,6 +85,7 @@ def main():
     """
     Main function
     """
+    load_dotenv()
     parser = arg_parser()
     store_add = parser.add
     store_ls = parser.ls
@@ -98,7 +93,7 @@ def main():
     store_update = parser.update
     store_wc = parser.wc
     store_freq_words = parser.freq_words
-    store_location = parser.url
+    store_location = os.environ.get("URL")
 
     if not (
         store_add
