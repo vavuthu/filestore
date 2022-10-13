@@ -136,18 +136,30 @@ class ServerHandler(SimpleHTTPRequestHandler):
                     for record in form["file"]:
                         # check if file already exists before writing
                         if not self.is_file_exist(record.filename):
-                            open(record.filename, "wb").write(record.file.read())
-                            response_msg += f"{record.filename} uploaded successfully\n"
+                            try:
+                                open(record.filename, "wb").write(record.file.read())
+                                response_msg += (
+                                    f"{record.filename} uploaded successfully\n"
+                                )
+                            except IOError:
+                                self.send_response(500)
+                                self.end_headers()
+                                return
                         else:
                             response_msg += f"{record.filename} exists in server. skipping upload...\n"
                 else:
                     if not self.is_file_exist(form["file"].filename):
-                        open(form["file"].filename, "wb").write(
-                            form["file"].file.read()
-                        )
-                        response_msg += (
-                            f"{form['file'].filename} uploaded successfully\n"
-                        )
+                        try:
+                            open(form["file"].filename, "wb").write(
+                                form["file"].file.read()
+                            )
+                            response_msg += (
+                                f"{form['file'].filename} uploaded successfully\n"
+                            )
+                        except IOError:
+                            self.send_response(500)
+                            self.end_headers()
+                            return
                     else:
                         response_msg += f"{form['file'].filename} exists in server. skipping upload...\n"
             except IOError:
@@ -201,11 +213,21 @@ class ServerHandler(SimpleHTTPRequestHandler):
         )
         if isinstance(form["file"], list):
             for record in form["file"]:
-                open(record.filename, "wb").write(record.file.read())
-                response_msg += f"{record.filename} updated successfully\n"
+                try:
+                    open(record.filename, "wb").write(record.file.read())
+                    response_msg += f"{record.filename} updated successfully\n"
+                except IOError:
+                    self.send_response(500)
+                    self.end_headers()
+                    return
         else:
-            open(form["file"].filename, "wb").write(form["file"].file.read())
-            response_msg += f"{form['file'].filename} updated successfully\n"
+            try:
+                open(form["file"].filename, "wb").write(form["file"].file.read())
+                response_msg += f"{form['file'].filename} updated successfully\n"
+            except IOError:
+                self.send_response(500)
+                self.end_headers()
+                return
 
         response.write(response_msg.encode("utf-8"))
         self.send_response(200)
