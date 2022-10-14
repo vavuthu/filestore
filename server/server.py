@@ -95,18 +95,20 @@ class ServerHandler(SimpleHTTPRequestHandler):
         """
         # check in headers whether POST request file is duplicate in server
         duplicate_file = self.headers.get("duplicate_file")
+        response = BytesIO()
         if duplicate_file:
             copyfile(duplicate_file, self.headers["file_name"])
-            response = BytesIO()
             message = f"created {self.headers['file_name']} without sending contents over network"
             response.write(message.encode("utf-8"))
+            self.send_response(200)
         else:
             result, message = self.upload_data()
-            response = BytesIO()
             if result:
-                response.write(message.encode("utf-8"))
+                self.send_response(200)
+            else:
+                self.send_response(500)
+            response.write(message.encode("utf-8"))
 
-        self.send_response(200)
         self.end_headers()
         self.wfile.write(response.getvalue())
 
@@ -126,48 +128,32 @@ class ServerHandler(SimpleHTTPRequestHandler):
                     "CONTENT_TYPE": self.headers["Content-Type"],
                 },
             )
-            try:
-                if isinstance(form["file"], list):
-                    for record in form["file"]:
-                        # check if file already exists before writing
-                        if not self.is_file_exist(record.filename):
-                            try:
-                                open(record.filename, "wb").write(record.file.read())
-                                response_msg += (
-                                    f"{record.filename} uploaded successfully\n"
-                                )
-                            except IOError:
-                                self.send_response(500)
-                                self.end_headers()
-                                return
-                        else:
-                            response_msg += f"{record.filename} exists in server. skipping upload...\n"
-                else:
-                    if not self.is_file_exist(form["file"].filename):
-                        try:
-                            open(form["file"].filename, "wb").write(
-                                form["file"].file.read()
-                            )
-                            response_msg += (
-                                f"{form['file'].filename} uploaded successfully\n"
-                            )
-                        except IOError:
-                            self.send_response(500)
-                            self.end_headers()
-                            return
-                    else:
-                        response_msg += f"{form['file'].filename} exists in server. skipping upload...\n"
-            except IOError:
-                return False, "Upload failed, please check permissions on file store"
+            if isinstance(form["file"], list):
+                for record in form["file"]:
+                    try:
+                        open(record.filename, "wb").write(record.file.read())
+                        response_msg += (
+                            f"{record.filename} uploaded successfully\n"
+                        )
+                    except IOError:
+                        return False, "Upload failed, please check permissions on file store"
+                    except Exception as err:
+                        return False, err
+            else:
+                try:
+                    open(form["file"].filename, "wb").write(
+                        form["file"].file.read()
+                    )
+                    response_msg += (
+                        f"{form['file'].filename} uploaded successfully\n"
+                    )
+                except IOError:
+                    return False, "Upload failed, please check permissions on file store"
+                except Exception as err:
+                    return False, err
 
         return True, f"{response_msg}"
 
-    def is_file_exist(self, filename):
-        """
-        Check whether file exists or not.
-        """
-        if os.path.isfile(filename):
-            return True
 
     def do_DELETE(self):
         """
