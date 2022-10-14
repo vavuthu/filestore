@@ -6,6 +6,7 @@ import cgi
 import json
 import os
 import re
+import ring
 
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from io import BytesIO
@@ -90,8 +91,7 @@ class ServerHandler(SimpleHTTPRequestHandler):
         """
         count = 0
         for each_file in files_list:
-            with open(each_file, "r") as fd:
-                count += len(fd.read().split())
+            count += count_words_in_file(each_file)
         return count
 
     def do_POST(self):
@@ -185,6 +185,9 @@ class ServerHandler(SimpleHTTPRequestHandler):
         for file in files_to_delete:
             try:
                 os.remove(file)
+                # delete the entry from cache
+                get_md5sum.delete(file)
+                count_words_in_file.delete(file)
             except OSError as e:
                 is_delete_failed = True
                 response_msg += f"Error: {e.filename} - {e.strerror}\n"
@@ -219,6 +222,7 @@ class ServerHandler(SimpleHTTPRequestHandler):
                     # delete the entry from cache, since PUT request changes the content of file
                     # which in turn changes the md5sum of a file
                     get_md5sum.delete(form["file"].filename)
+                    count_words_in_file.delete(form["file"].filename)
                 except IOError:
                     self.send_response(500)
                     self.end_headers()
@@ -230,6 +234,7 @@ class ServerHandler(SimpleHTTPRequestHandler):
                 # delete the entry from cache, since PUT request changes the content of file
                 # which in turn changes the md5sum of a file
                 get_md5sum.delete(form["file"].filename)
+                count_words_in_file.delete(form["file"].filename)
             except IOError:
                 self.send_response(500)
                 self.end_headers()
@@ -240,6 +245,14 @@ class ServerHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(response.getvalue())
 
+
+@ring.lru()
+def count_words_in_file(filename):
+    """
+    Count the words in a file
+    """
+    with open(filename, "r") as fd:
+        return len(fd.read().split())
 
 def run_server(server_class=HTTPServer, handler_class=ServerHandler):
     server_address = ("", 8000)
