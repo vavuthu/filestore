@@ -4,7 +4,10 @@ Common functions which is used for both client and server
 
 import hashlib
 
+import ring
 
+
+@ring.lru()
 def get_md5sum(filename):
     """
     Calculate md5sum of file

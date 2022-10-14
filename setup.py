@@ -16,6 +16,7 @@ setup(
         "bs4",
         "python-dotenv",
         "requests",
+        "ring",
     ],
     entry_points={
         "console_scripts": [

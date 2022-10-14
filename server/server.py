@@ -216,6 +216,9 @@ class ServerHandler(SimpleHTTPRequestHandler):
                 try:
                     open(record.filename, "wb").write(record.file.read())
                     response_msg += f"{record.filename} updated successfully\n"
+                    # delete the entry from cache, since PUT request changes the content of file
+                    # which in turn changes the md5sum of a file
+                    get_md5sum.delete(form["file"].filename)
                 except IOError:
                     self.send_response(500)
                     self.end_headers()
@@ -224,6 +227,9 @@ class ServerHandler(SimpleHTTPRequestHandler):
             try:
                 open(form["file"].filename, "wb").write(form["file"].file.read())
                 response_msg += f"{form['file'].filename} updated successfully\n"
+                # delete the entry from cache, since PUT request changes the content of file
+                # which in turn changes the md5sum of a file
+                get_md5sum.delete(form["file"].filename)
             except IOError:
                 self.send_response(500)
                 self.end_headers()
