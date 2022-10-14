@@ -71,6 +71,12 @@ dup is duplicate of file3 in server
 created dup without sending contents over network
 ```
 
+4. add file to file store which doesn't have write permissions
+```console
+$ store --add file1
+Upload failed, please check permissions on file store
+```
+
 ### ls
 List all the files in server
 
@@ -100,9 +106,24 @@ Error: file1 - No such file or directory
 ### update
 Updates file on server, if file doesn't exist it will create new file
 
+1. update file
 ```console
 $ store --update updatefile1 
 updatefile1 updated successfully
+```
+
+2. update file having contents same on server
+```console
+$ store --update file1_dup
+file1_dup is duplicate of file1 in server
+updated file1_dup without sending contents over network
+```
+
+3. update the file having same filename and contents on server. It will update metadata of file
+```console
+$ store --update file1
+file1 is duplicate of file1 in server
+updated metadata for file1 since filename and content are same
 ```
 
 ### wc
