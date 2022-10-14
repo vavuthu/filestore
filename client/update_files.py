@@ -13,7 +13,7 @@ def update_files(files, location):
     List files in server
 
     Args:
-        files (list): List of files to upload
+        files (list): List of files to update
         location (str): URL of http server
 
     """

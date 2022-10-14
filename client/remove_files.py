@@ -10,7 +10,7 @@ def remove_files(files, location):
     List files in server
 
     Args:
-        files (list): List of files to upload
+        files (list): List of files to delete
         location (str): URL of http server
 
     """
