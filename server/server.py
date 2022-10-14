@@ -8,6 +8,7 @@ import os
 import re
 import ring
 
+from collections import Counter
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from io import BytesIO
 from shutil import copyfile
@@ -72,18 +73,12 @@ class ServerHandler(SimpleHTTPRequestHandler):
         """
         Most frequently used words in given list of files
         """
-        words_mapping = {}
+        # create empty counter
+        words_mapping = Counter()
 
         for each_file in files_list:
-            with open(each_file, "r") as fd:
-                words = fd.read().lower().split()
-                for word in words:
-                    if words_mapping.get(word):
-                        current_count = words_mapping[word] + 1
-                    else:
-                        current_count = 1
-                    words_mapping[word] = current_count
-        return words_mapping
+            words_mapping += Counter(frequent_words_in_file(each_file))
+        return dict(words_mapping)
 
     def count_words(self, files_list):
         """
@@ -188,6 +183,7 @@ class ServerHandler(SimpleHTTPRequestHandler):
                 # delete the entry from cache
                 get_md5sum.delete(file)
                 count_words_in_file.delete(file)
+                frequent_words_in_file.delete(file)
             except OSError as e:
                 is_delete_failed = True
                 response_msg += f"Error: {e.filename} - {e.strerror}\n"
@@ -221,8 +217,9 @@ class ServerHandler(SimpleHTTPRequestHandler):
                     response_msg += f"{record.filename} updated successfully\n"
                     # delete the entry from cache, since PUT request changes the content of file
                     # which in turn changes the md5sum of a file
-                    get_md5sum.delete(form["file"].filename)
-                    count_words_in_file.delete(form["file"].filename)
+                    get_md5sum.delete(record.filename)
+                    count_words_in_file.delete(record.filename)
+                    frequent_words_in_file.delete(record.filename)
                 except IOError:
                     self.send_response(500)
                     self.end_headers()
@@ -235,6 +232,7 @@ class ServerHandler(SimpleHTTPRequestHandler):
                 # which in turn changes the md5sum of a file
                 get_md5sum.delete(form["file"].filename)
                 count_words_in_file.delete(form["file"].filename)
+                frequent_words_in_file.delete(form["file"].filename)
             except IOError:
                 self.send_response(500)
                 self.end_headers()
@@ -253,6 +251,24 @@ def count_words_in_file(filename):
     """
     with open(filename, "r") as fd:
         return len(fd.read().split())
+
+
+@ring.lru()
+def frequent_words_in_file(filename):
+    """
+    Most frequently used words in a file
+    """
+    words_mapping_file = {}
+
+    with open(filename, "r") as fd:
+        words = fd.read().lower().split()
+        for word in words:
+            if words_mapping_file.get(word):
+                current_count = words_mapping_file[word] + 1
+            else:
+                current_count = 1
+            words_mapping_file[word] = current_count
+    return words_mapping_file
 
 def run_server(server_class=HTTPServer, handler_class=ServerHandler):
     server_address = ("", 8000)
