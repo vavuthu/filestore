@@ -2,10 +2,10 @@
 Upload files to http server
 """
 
-import json
 import requests
 
 from utility.utility import get_md5sum
+from client.helpers import get_md5sum_mapping_server
 
 
 def add_files(files, location):
@@ -18,10 +18,7 @@ def add_files(files, location):
 
     """
     # get the md5sum of files in server
-    headers = {"md5sum": "True"}
-    response = requests.get(location, headers=headers)
-    # convert string representation of dictionary to dictionary
-    md5sum_mapping_server = json.loads(response.text)
+    md5sum_mapping_server = get_md5sum_mapping_server(location)
 
     files_to_upload = []
     for each_file in files:

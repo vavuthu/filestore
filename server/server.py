@@ -9,6 +9,7 @@ import re
 import ring
 
 from collections import Counter
+from datetime import datetime
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from io import BytesIO
 from shutil import copyfile
@@ -95,13 +96,11 @@ class ServerHandler(SimpleHTTPRequestHandler):
         """
         # check in headers whether POST request file is duplicate in server
         duplicate_file = self.headers.get("duplicate_file")
-        response = BytesIO()
         if duplicate_file:
-            copyfile(duplicate_file, self.headers["file_name"])
-            message = f"created {self.headers['file_name']} without sending contents over network"
-            response.write(message.encode("utf-8"))
-            self.send_response(200)
+            self.filecopy(duplicate_file)
+            return
         else:
+            response = BytesIO()
             result, message = self.upload_data()
             if result:
                 self.send_response(200)
@@ -132,28 +131,27 @@ class ServerHandler(SimpleHTTPRequestHandler):
                 for record in form["file"]:
                     try:
                         open(record.filename, "wb").write(record.file.read())
-                        response_msg += (
-                            f"{record.filename} uploaded successfully\n"
-                        )
+                        response_msg += f"{record.filename} uploaded successfully\n"
                     except IOError:
-                        return False, "Upload failed, please check permissions on file store"
+                        return (
+                            False,
+                            "Upload failed, please check permissions on file store",
+                        )
                     except Exception as err:
                         return False, err
             else:
                 try:
-                    open(form["file"].filename, "wb").write(
-                        form["file"].file.read()
-                    )
-                    response_msg += (
-                        f"{form['file'].filename} uploaded successfully\n"
-                    )
+                    open(form["file"].filename, "wb").write(form["file"].file.read())
+                    response_msg += f"{form['file'].filename} uploaded successfully\n"
                 except IOError:
-                    return False, "Upload failed, please check permissions on file store"
+                    return (
+                        False,
+                        "Upload failed, please check permissions on file store",
+                    )
                 except Exception as err:
                     return False, err
 
         return True, f"{response_msg}"
-
 
     def do_DELETE(self):
         """
@@ -186,6 +184,11 @@ class ServerHandler(SimpleHTTPRequestHandler):
         """
         Serves a PUT request
         """
+        duplicate_file = self.headers.get("duplicate_file")
+        if duplicate_file:
+            self.filecopy(duplicate_file)
+            return
+
         response_msg = ""
         response = BytesIO()
         form = cgi.FieldStorage(
@@ -229,6 +232,26 @@ class ServerHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(response.getvalue())
 
+    def filecopy(self, duplicate_file):
+        """
+        Copy the file
+        """
+        response = BytesIO()
+        # For update request, there is a chance of filename and content are same, in that
+        # case, update metadata for file
+        if duplicate_file == self.headers["file_name"]:
+            epoch_time = datetime.now().timestamp()
+            os.utime(self.headers["file_name"], (epoch_time, epoch_time))
+            message = f"updated metadata for {self.headers['file_name']} since filename and content are same"
+        else:
+            copyfile(duplicate_file, self.headers["file_name"])
+            message = f"updated {self.headers['file_name']} without sending contents over network"
+
+        response.write(message.encode("utf-8"))
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(response.getvalue())
+
 
 @ring.lru()
 def count_words_in_file(filename):
@@ -255,6 +278,7 @@ def frequent_words_in_file(filename):
                 current_count = 1
             words_mapping_file[word] = current_count
     return words_mapping_file
+
 
 def run_server(server_class=HTTPServer, handler_class=ServerHandler):
     server_address = ("", 8000)
