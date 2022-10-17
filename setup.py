@@ -13,7 +13,6 @@ setup(
         "files (HTTP server and a command line client)"
     ),
     install_requires=[
-        "bs4",
         "python-dotenv",
         "requests",
         "ring",
